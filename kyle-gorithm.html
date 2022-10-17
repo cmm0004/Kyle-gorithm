@@ -1,0 +1,97 @@
+<html>
+<title>Kyle-gorithm</title>
+
+<head>
+    <script type="text/javascript">
+
+        function handleClick() {
+            var loglines = document.getElementById("inputs").elements[0].value.split("\n");
+            var top = document.getElementById("inputs").elements[1].value;
+            var sublength = document.getElementById("inputs").elements[2].value;
+            // this is not a real queue, but at small sizes, doesnt matter.
+            var queue = [];
+            var map = new Map();
+            var freqMap = new Map();
+
+            loglines.forEach(logline => {
+                for (let i = sublength; i < logline.length; i++) {
+                    var unit = logline.substring(i - sublength, i);
+                    var prevValue = map.get(unit);
+                    // not new
+                    if (prevValue != undefined) {
+                        map.set(unit, prevValue + 1);
+                        // update freqMap, objects are sets
+                        freqMap.get(prevValue).delete(unit);
+                        if (freqMap.has(prevValue + 1)) {
+                            freqMap.get(prevValue + 1).add(unit);
+                        } else {
+                            // new highest frequency
+                            var set = new Set();
+                            set.add(unit);
+                            freqMap.set(prevValue + 1, set);
+                            queue.push(prevValue+1);
+                            // remove oldest item from queue if longer than top
+                            // clean out list of units from that frequency
+                            if (queue.length > top) {
+                               freqMap.get(queue.shift()).clear();
+                            }
+                        }
+                        // new unit, prev value would be 0
+                    } else {
+                        map.set(unit, 1);
+                        // update freq map, not tracking 0 occurances
+                        if (freqMap.has(1)) {
+                            freqMap.get(1).add(unit);
+                        // first iteration
+                        } else {
+                            var set = new Set();
+                            set.add(unit);
+                            freqMap.set(1, set);
+                            queue.push(1);
+                        }
+                    }
+                    console.log(freqMap);
+            }});
+            console.log(queue);
+            var output = "<p>";
+            for (let j = queue.length -1; j >= 0; j--) {
+                // if no occurances for this lenght then skip
+                // though im not sure this can happen?
+                if(freqMap.get(queue[j]).length == 0) {
+                    continue;
+                }
+                output += "<h4> Output for ";
+                output += queue[j];
+                output += " occurances</h4>";
+
+                output+= "<p>" + Array.from(freqMap.get(queue[j]).values()).join("</p><p>") + "</p>";
+            }
+            output += "</p>";
+
+
+            document.getElementById("output").innerHTML = output;
+        }
+    </script>
+</head>
+
+<body>
+    <form id="inputs" action="javascript:handleClick()">
+        <label for="fname">Logs, one per line:</label>
+        <br><br>
+        <textarea id="fname" name="fname" rows="15" cols="150"></textarea>
+        <br><br>
+
+        <label for="top">Top X most common (1-10):</label>
+        <input type="number" id="top" name="top" min="1" max="10" value="3">
+        <br><br>
+        <label for="length">Length of substring (1-50):</label>
+        <input type="number" id="length" name="length" min="1" max="50" value="25">
+        <br><br>
+        <input type="submit" value="Find Common Substrings">
+    </form>
+
+    <hr />
+    <p id="output"></p>
+</body>
+
+</html>
